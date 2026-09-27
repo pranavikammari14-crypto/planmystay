@@ -1,0 +1,6 @@
+{
+  "name": "PlanMyStay.in",
+  "description": "Plan smarter trips across India with flights, trains, buses, stays and AI-powered travel planning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

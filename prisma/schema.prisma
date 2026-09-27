@@ -1,0 +1,215 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  PENDING
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  passwordHash  String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  profile       Profile?
+  favorites     Favorite[]
+  bookings      Booking[]
+  trips         Trip[]
+  aiTrips       AITrip[]
+  travelWallet  TravelWallet?
+  notifications Notification[]
+}
+
+model Profile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String?  @default("Member account")
+  phone          String?
+  avatar         String?  @default("AP")
+  mealPref       String?
+  seatPref       String?
+  hotelClass     String?
+}
+
+model Hotel {
+  id                String         @id @default(uuid())
+  name              String
+  location          String
+  city              String
+  state             String
+  distanceCentre    String
+  stars             Int            @default(5)
+  rating            Float          @default(4.7)
+  reviewCount       Int            @default(0)
+  pricePerNight     Int
+  breakfastIncluded Boolean        @default(true)
+  isPick            Boolean        @default(false)
+  isFeatured        Boolean        @default(true)
+  description       String
+  neighborhood      String
+  createdAt         DateTime       @default(now())
+  images            HotelImage[]
+  amenities         HotelAmenity[]
+  rooms             Room[]
+  reviews           HotelReview[]
+  favorites         Favorite[]
+  bookings          Booking[]
+
+  @@index([city])
+  @@index([pricePerNight])
+}
+
+model Room {
+  id        String    @id @default(uuid())
+  hotelId   String
+  hotel     Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name      String
+  type      String
+  price     Int
+  bed       String
+  maxGuests Int       @default(2)
+  sqft      Int
+  perks     String[]
+  bookings  Booking[]
+}
+
+model HotelImage {
+  id        String   @id @default(uuid())
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  order     Int      @default(0)
+}
+
+model HotelAmenity {
+  id        String   @id @default(uuid())
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name      String
+}
+
+model HotelReview {
+  id        String   @id @default(uuid())
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  userName  String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, hotelId])
+}
+
+model Booking {
+  id             String         @id @default(uuid())
+  userId         String?
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  hotelId        String
+  hotel          Hotel          @relation(fields: [hotelId], references: [id])
+  roomId         String?
+  room           Room?          @relation(fields: [roomId], references: [id])
+  checkIn        DateTime
+  checkOut       DateTime
+  nights         Int
+  guests         Int
+  guestName      String
+  guestEmail     String
+  guestPhone     String
+  specialRequests String?
+  addOns         String[]
+  basePrice      Int
+  taxPrice       Int
+  totalPrice     Int
+  status         BookingStatus  @default(CONFIRMED)
+  bookedAt       DateTime       @default(now())
+  payment        Payment?
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  bookingId     String   @unique
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount        Int
+  currency      String   @default("INR")
+  status        String   @default("SUCCESS")
+  method        String
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt     DateTime @default(now())
+}
+
+model Trip {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination String
+  startDate   DateTime?
+  endDate     DateTime?
+  items       TripItem[]
+  createdAt   DateTime   @default(now())
+}
+
+model TripItem {
+  id          String   @id @default(uuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  date        DateTime?
+  cost        Int?
+}
+
+model AITrip {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  destination String
+  days        Int
+  budget      String
+  planJson    Json
+  createdAt   DateTime @default(now())
+}
+
+model TravelWallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Int      @default(2500)
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
