@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { SearchWidget } from './components/SearchWidget';
@@ -385,6 +386,9 @@ export default function App() {
           showToast(`Welcome back, ${user.name}!`);
         }}
       />
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
