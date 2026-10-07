@@ -32,6 +32,10 @@ export const Header: React.FC<HeaderProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Traveler');
+  const firstName = displayName.split(' ')[0] || 'Traveler';
+  const avatarText = user?.avatar || (user?.name ? user.name.slice(0, 2).toUpperCase() : (user?.email ? user.email.slice(0, 2).toUpperCase() : 'AP'));
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EFE7DB] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -104,10 +108,10 @@ export const Header: React.FC<HeaderProps> = ({
                 aria-label="User profile menu"
               >
                 <div className="w-8 h-8 rounded-full bg-[#17201E] text-white flex items-center justify-center text-xs font-bold tracking-wider">
-                  {user.avatar || 'AP'}
+                  {avatarText}
                 </div>
                 <span className="hidden sm:inline text-xs font-semibold text-[#17201E] max-w-[110px] truncate">
-                  {user.name.split(' ')[0]}
+                  {firstName}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-neutral-500" />
               </button>
@@ -123,11 +127,11 @@ export const Header: React.FC<HeaderProps> = ({
                     {/* Header in dropdown */}
                     <div className="flex items-center gap-3 p-3 border-b border-neutral-100">
                       <div className="w-10 h-10 rounded-full bg-[#17201E] text-white flex items-center justify-center font-bold text-sm">
-                        {user.avatar || 'AP'}
+                        {avatarText}
                       </div>
                       <div className="overflow-hidden">
                         <div className="font-semibold text-sm text-[#17201E] truncate">
-                          {user.name}
+                          {displayName}
                         </div>
                         <div className="text-xs text-neutral-500 truncate">
                           {user.title || 'Founder account'}

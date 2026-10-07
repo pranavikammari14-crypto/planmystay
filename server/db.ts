@@ -114,6 +114,16 @@ function loadDB(): DBSchema {
       if (!parsed.travelStats) parsed.travelStats = {};
       if (!parsed.achievements) parsed.achievements = [];
       if (!parsed.travelAlbum) parsed.travelAlbum = [];
+      if (Array.isArray(parsed.users)) {
+        parsed.users.forEach((u: any) => {
+          if (!u.name) {
+            u.name = u.email === 'pranaviguntoju13@gmail.com' ? 'Alluri Vijaya Priya' : (u.email ? u.email.split('@')[0] : 'Traveler');
+          }
+          if (!u.avatar) {
+            u.avatar = u.name ? u.name.slice(0, 2).toUpperCase() : 'AP';
+          }
+        });
+      }
       return parsed;
     }
   } catch (err) {

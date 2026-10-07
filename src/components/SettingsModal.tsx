@@ -15,11 +15,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   user,
   onUpdateUser,
 }) => {
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone || '+91 98490 12345');
-  const [mealPref, setMealPref] = useState(user.preferences?.mealPref || 'North Indian & Continental');
-  const [seatPref, setSeatPref] = useState(user.preferences?.seatPref || 'Window / Lower Berth');
-  const [hotelClass, setHotelClass] = useState(user.preferences?.hotelClass || '5-Star Luxury & Heritage');
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '+91 98490 12345');
+  const [mealPref, setMealPref] = useState(user?.preferences?.mealPref || 'North Indian & Continental');
+  const [seatPref, setSeatPref] = useState(user?.preferences?.seatPref || 'Window / Lower Berth');
+  const [hotelClass, setHotelClass] = useState(user?.preferences?.hotelClass || '5-Star Luxury & Heritage');
   const [saved, setSaved] = useState(false);
 
   if (!isOpen) return null;

@@ -458,7 +458,7 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
-          showToast(`Welcome back, ${user.name}!`);
+          showToast(`Welcome back, ${user.name || user.email || 'Traveler'}!`);
         }}
       />
 

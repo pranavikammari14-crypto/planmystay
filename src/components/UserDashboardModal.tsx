@@ -233,12 +233,12 @@ export const UserDashboardModal: React.FC<UserDashboardModalProps> = ({
         <div className="px-6 py-4 bg-[#073D36] text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm font-bold text-[#F27658]">
-              {user.avatar || user.name.slice(0, 2).toUpperCase()}
+              {user.avatar || (user.name ? user.name.slice(0, 2).toUpperCase() : 'AP')}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-serif font-bold text-lg text-white">
-                  {user.name}
+                  {user.name || user.email || 'Traveler'}
                 </h3>
                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                   user.role === 'ADMIN'
@@ -418,7 +418,7 @@ export const UserDashboardModal: React.FC<UserDashboardModalProps> = ({
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-neutral-100">
                       <span className="text-neutral-500">Name</span>
-                      <span className="font-semibold text-neutral-800">{user.name}</span>
+                      <span className="font-semibold text-neutral-800">{user.name || user.email || 'Traveler'}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-neutral-100">
                       <span className="text-neutral-500">Email</span>

@@ -2,6 +2,7 @@
   "users": [
     {
       "id": "usr_founder_01",
+      "name": "Alluri Vijaya Priya",
       "email": "pranaviguntoju13@gmail.com",
       "passwordHash": "d64b7653ff42691c587c6cf445a2595fe1520f89a712ec37f5cde1fe4b33fb14917a29c7bb2c7377b91daa223170d42ed7aca25af5e6a5e8866796686f47295d",
       "salt": "9620f599493e2233d3ef1be3d8d25cf0",

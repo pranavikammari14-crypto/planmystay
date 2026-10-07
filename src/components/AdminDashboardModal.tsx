@@ -612,7 +612,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-[#17201E]">{u.name}</span>
+                        <span className="font-semibold text-sm text-[#17201E]">{u.name || u.email || 'User'}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           u.role === 'ADMIN'
                             ? 'bg-[#F27658] text-white'
