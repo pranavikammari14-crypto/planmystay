@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types/travel';
-import { Compass, Wallet, Settings, LogOut, ShieldCheck, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
+import { Compass, Wallet, Settings, LogOut, ShieldCheck, Menu, X, ChevronDown, Sparkles, Flame, Hotel as HotelIcon, LayoutDashboard, Camera } from 'lucide-react';
 
 interface HeaderProps {
   user: UserProfile | null;
+  onOpenDashboard?: () => void;
+  onOpenOwnerPortal?: () => void;
   onOpenTrips: () => void;
   onOpenWallet: () => void;
   onOpenSettings: () => void;
@@ -16,6 +18,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   user,
+  onOpenDashboard,
+  onOpenOwnerPortal,
   onOpenTrips,
   onOpenWallet,
   onOpenSettings,
@@ -32,14 +36,19 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EFE7DB] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full bg-[#073D36] flex items-center justify-center text-white font-serif font-bold text-lg shadow-sm">
-            P
-          </div>
-          <span className="font-serif font-bold text-2xl tracking-tight text-[#17201E]">
-            PlanMyStay<span className="text-[#F27658]">.in</span>
+        <div className="flex items-center gap-2.5">
+          <a href="#" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-full bg-[#073D36] flex items-center justify-center text-white font-serif font-bold text-lg shadow-sm">
+              P
+            </div>
+            <span className="font-serif font-bold text-2xl tracking-tight text-[#17201E]">
+              PlanMyStay<span className="text-[#F27658]">.in</span>
+            </span>
+          </a>
+          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-100/90 text-amber-900 border border-amber-300/70">
+            Demo Mode
           </span>
-        </a>
+        </div>
 
         {/* Center Nav - Desktop */}
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#17201E]/80">
@@ -131,12 +140,30 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         onClick={() => {
                           setDropdownOpen(false);
+                          if (onOpenDashboard) onOpenDashboard();
+                          else onOpenTrips();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-800 hover:text-[#073D36] hover:bg-[#FAF6F0] transition-colors cursor-pointer text-left"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-[#073D36]" />
+                        <div className="flex-1 flex items-center justify-between">
+                          <span>User Dashboard</span>
+                          <span className="text-[10px] font-bold text-[#F27658] bg-[#F27658]/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                            <Flame className="w-3 h-3 fill-[#F27658]" />
+                            <span>Streak</span>
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
                           onOpenTrips();
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-700 hover:text-[#073D36] hover:bg-[#F7F1E8] transition-colors cursor-pointer text-left"
                       >
                         <Compass className="w-4 h-4 text-neutral-500" />
-                        <span>My trips</span>
+                        <span>My Trips & Tickets</span>
                       </button>
 
                       <button
@@ -150,16 +177,18 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Travel wallet</span>
                       </button>
 
-                      <button
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          onOpenSettings();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-700 hover:text-[#073D36] hover:bg-[#F7F1E8] transition-colors cursor-pointer text-left"
-                      >
-                        <Settings className="w-4 h-4 text-neutral-500" />
-                        <span>Settings</span>
-                      </button>
+                      {(user.role === 'OWNER' || user.role === 'ADMIN') && onOpenOwnerPortal && (
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            onOpenOwnerPortal();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-900 bg-amber-50 hover:bg-amber-100/70 transition-colors cursor-pointer text-left"
+                        >
+                          <HotelIcon className="w-4 h-4 text-amber-700" />
+                          <span>Owner Portal</span>
+                        </button>
+                      )}
 
                       {user.role === 'ADMIN' && (
                         <button
@@ -170,9 +199,20 @@ export const Header: React.FC<HeaderProps> = ({
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#073D36] bg-[#073D36]/5 hover:bg-[#073D36]/10 transition-colors cursor-pointer text-left"
                         >
                           <ShieldCheck className="w-4 h-4 text-[#073D36]" />
-                          <span>Admin dashboard</span>
+                          <span>Admin Executive Hub</span>
                         </button>
                       )}
+
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          onOpenSettings();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-700 hover:text-[#073D36] hover:bg-[#F7F1E8] transition-colors cursor-pointer text-left"
+                      >
+                        <Settings className="w-4 h-4 text-neutral-500" />
+                        <span>Settings</span>
+                      </button>
                     </div>
 
                     {/* Logout */}

@@ -85,22 +85,25 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
     setIsProcessingPayment(true);
 
     try {
-      // Create backend order
-      const orderRes = await fetch('/api/payments/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: finalTotal,
-          hotelName: hotel.name,
-        }),
-      });
-      const orderData = await orderRes.json();
+      // Try backend order if available
+      try {
+        await fetch('/api/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: finalTotal,
+            hotelName: hotel.name,
+          }),
+        });
+      } catch {
+        // Continue seamlessly in client mode
+      }
 
       // Simulate payment verification delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
       const newBooking: Booking = {
-        id: `PMS-${hotel.city.slice(0, 3).toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`,
+        id: `DEMO-PMS-${hotel.city.slice(0, 3).toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`,
         hotelId: hotel.id,
         hotelName: hotel.name,
         hotelImage: hotel.images[0],
@@ -119,23 +122,30 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
         taxPrice: gst,
         totalPrice: finalTotal,
         status: 'confirmed',
+        isDemo: true,
+        bookingType: 'DEMO',
+        referenceCode: `DEMO-HTL-${hotel.city.slice(0, 3).toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`,
         bookedAt: new Date().toISOString(),
-        paymentMethod: paymentMethod === 'upi' ? 'UPI (Google Pay / PhonePe)' : paymentMethod === 'card' ? 'Visa / Mastercard' : 'NetBanking',
-        paymentId: `pay_rzp_${Date.now()}`,
+        paymentMethod: paymentMethod === 'upi' ? 'UPI (Razorpay Demo Sandbox)' : paymentMethod === 'card' ? 'Card (Razorpay Demo Sandbox)' : 'NetBanking (Demo Sandbox)',
+        paymentId: `pay_demo_${Date.now()}`,
       };
 
-      // Persist in backend
-      await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBooking),
-      });
+      // Try persisting in backend if available
+      try {
+        await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newBooking),
+        });
+      } catch {
+        // Handled in client state
+      }
 
       setConfirmedBooking(newBooking);
       onBookingComplete(newBooking);
       setStep(6);
-    } catch (err) {
-      alert('Payment processing failed. Please try again.');
+    } catch {
+      alert('Unable to process booking. Please check your network and try again.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -389,6 +399,18 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
           {/* STEP 5: Payment Gateway Simulation */}
           {step === 5 && (
             <div className="space-y-4">
+              {/* Demo Mode Notice */}
+              <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-bold text-[10px] uppercase tracking-wider">
+                    ⚡ Razorpay Test Sandbox
+                  </span>
+                  <span className="font-medium text-[11px] sm:text-xs">
+                    Safe demo mode: 1-click test checkout is active. No money will be deducted from your bank.
+                  </span>
+                </div>
+              </div>
+
               <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#EFE7DB] flex items-center justify-between">
                 <div>
                   <div className="text-xs text-neutral-500">Payable via Razorpay Gateway</div>
@@ -405,9 +427,9 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
               {/* Payment Methods */}
               <div className="space-y-2">
                 {[
-                  { id: 'upi', name: 'Instant UPI (Google Pay, PhonePe, Paytm)', desc: 'Scan QR or enter UPI ID' },
-                  { id: 'card', name: 'Credit or Debit Card', desc: 'Visa, MasterCard, RuPay, Amex' },
-                  { id: 'netbanking', name: 'NetBanking', desc: 'HDFC, ICICI, SBI, Axis & all major Indian banks' },
+                  { id: 'upi', name: 'Instant UPI (Google Pay, PhonePe, Paytm)', desc: 'Test checkout via sandbox UPI simulator' },
+                  { id: 'card', name: 'Credit or Debit Card', desc: 'Test sandbox cards (Visa, MasterCard, RuPay)' },
+                  { id: 'netbanking', name: 'NetBanking', desc: 'Simulated NetBanking portal' },
                 ].map((pm) => (
                   <label
                     key={pm.id}
@@ -436,24 +458,33 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
 
           {/* STEP 6: Booking Confirmation */}
           {step === 6 && confirmedBooking && (
-            <div className="space-y-5 text-center py-4">
+            <div className="space-y-4 text-center py-3">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
                 <Check className="w-8 h-8 stroke-[3]" />
               </div>
 
               <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-950 font-bold text-xs uppercase tracking-wider mb-2">
+                  <span>⚠️ DEMO RESERVATION (TEST MODE)</span>
+                </div>
                 <h4 className="font-serif font-bold text-2xl text-[#17201E]">
-                  Your Stay is Confirmed!
+                  Your Stay is Confirmed (Demo)!
                 </h4>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Confirmation voucher sent to <strong>{confirmedBooking.guestEmail}</strong>
+                <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
+                  Demonstration stay voucher generated. Synchronized with your <strong>My Trips</strong> dashboard. No actual charge occurred.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-[#FAF6F0] border border-[#EFE7DB] text-left space-y-2.5 text-xs text-neutral-600">
                 <div className="flex justify-between">
-                  <span className="font-semibold text-[#17201E]">Booking ID:</span>
+                  <span className="font-semibold text-[#17201E]">Demo Booking ID:</span>
                   <span className="font-mono font-bold text-[#F27658]">{confirmedBooking.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Booking Type:</span>
+                  <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded text-[10px] uppercase">
+                    DEMO / TEST MODE
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Hotel:</span>
@@ -472,8 +503,8 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
                   <span className="font-semibold text-[#17201E]">{confirmedBooking.checkOut} ({confirmedBooking.nights} Nights)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Amount Paid:</span>
-                  <span className="font-bold text-[#073D36]">₹{confirmedBooking.totalPrice.toLocaleString('en-IN')}</span>
+                  <span>Simulated Total:</span>
+                  <span className="font-bold text-[#073D36]">₹{(confirmedBooking.totalPrice || confirmedBooking.totalPaid || finalTotal).toLocaleString('en-IN')} (Demo Zero Charge)</span>
                 </div>
               </div>
 

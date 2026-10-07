@@ -1,0 +1,210 @@
+{
+  "users": [
+    {
+      "id": "usr_founder_01",
+      "email": "pranaviguntoju13@gmail.com",
+      "passwordHash": "d64b7653ff42691c587c6cf445a2595fe1520f89a712ec37f5cde1fe4b33fb14917a29c7bb2c7377b91daa223170d42ed7aca25af5e6a5e8866796686f47295d",
+      "salt": "9620f599493e2233d3ef1be3d8d25cf0",
+      "role": "ADMIN",
+      "title": "Founder account",
+      "avatar": "AP",
+      "phone": "+91 98490 99999",
+      "preferences": {
+        "mealPref": "South Indian Gourmet",
+        "seatPref": "Window",
+        "hotelClass": "5-Star Heritage"
+      },
+      "createdAt": "2026-09-28T11:36:20.283Z"
+    }
+  ],
+  "bookings": [
+    {
+      "userId": "usr_founder_01",
+      "serviceType": "BUS",
+      "title": "IntrCity SmartBus - BharatBenz AC Sleeper",
+      "subtitle": "Hyderabad → Mumbai · Departs 18:30",
+      "referenceCode": "BUS-INT-721177",
+      "details": {
+        "operator": "IntrCity SmartBus",
+        "busType": "BharatBenz AC Sleeper",
+        "ticketNumber": "TKT-56584677"
+      },
+      "passengers": [
+        {
+          "name": "Alluri Vijaya Priya",
+          "age": 28,
+          "gender": "FEMALE",
+          "seatBerth": "Seat UB-4"
+        }
+      ],
+      "checkInOrDeparture": "Hyderabad (18:30)",
+      "checkOutOrArrival": "Mumbai (08:45)",
+      "amount": 1450,
+      "tax": 73,
+      "totalPaid": 1523,
+      "status": "CANCELLED",
+      "paymentMethod": "Razorpay UPI/Card",
+      "id": "PMS-BUS-495090",
+      "bookedAt": "2026-09-28T11:36:45.169Z"
+    },
+    {
+      "userId": "usr_founder_01",
+      "serviceType": "TRAIN",
+      "title": "Vande Bharat Express (#20702)",
+      "subtitle": "Secunderabad Junction (SC) → Tirupati (TPTY) · Class EC",
+      "referenceCode": "646-7508276",
+      "details": {
+        "trainNumber": "20702",
+        "trainName": "Vande Bharat Express",
+        "classCode": "EC",
+        "allocatedPassengers": [
+          {
+            "name": "Alluri Vijaya Priya",
+            "age": 28,
+            "gender": "FEMALE",
+            "bookingStatus": "CNF",
+            "coach": "E1",
+            "berth": 12,
+            "berthType": "WINDOW",
+            "foodChoice": "VEG"
+          }
+        ]
+      },
+      "passengers": [
+        {
+          "name": "Alluri Vijaya Priya",
+          "age": 28,
+          "gender": "FEMALE",
+          "seatBerth": "E1 / Berth 12 (WINDOW)"
+        }
+      ],
+      "checkInOrDeparture": "Secunderabad Junction (SC) (06:15)",
+      "checkOutOrArrival": "Tirupati (TPTY) (14:30)",
+      "amount": 3080,
+      "tax": 154,
+      "totalPaid": 3234,
+      "status": "CONFIRMED",
+      "paymentMethod": "Razorpay UPI/NetBanking",
+      "id": "PMS-TRA-659553",
+      "bookedAt": "2026-09-28T11:36:36.175Z"
+    },
+    {
+      "userId": "usr_founder_01",
+      "serviceType": "FLIGHT",
+      "title": "IndiGo (6E 5342)",
+      "subtitle": "HYD → BOM · 06:15 - 07:45",
+      "referenceCode": "6EBRFP",
+      "details": {
+        "flightNumber": "6E 5342",
+        "airline": "IndiGo",
+        "fromCode": "HYD",
+        "toCode": "BOM",
+        "duration": "1h 30m",
+        "cabin": "ECONOMY",
+        "eTicketNumbers": [
+          "098-6230482442"
+        ]
+      },
+      "passengers": [
+        {
+          "name": "Ms Alluri Vijaya Priya",
+          "idNumber": "AADHAAR-8472",
+          "seatBerth": "12F"
+        }
+      ],
+      "checkInOrDeparture": "06:15, HYD",
+      "checkOutOrArrival": "07:45, BOM",
+      "amount": 3850,
+      "tax": 462,
+      "totalPaid": 4312,
+      "status": "CONFIRMED",
+      "paymentMethod": "Razorpay UPI/Card",
+      "id": "PMS-FLI-127921",
+      "bookedAt": "2026-09-28T11:36:26.309Z"
+    },
+    {
+      "id": "PMS-HYD-84920",
+      "userId": "usr_founder_01",
+      "serviceType": "HOTEL",
+      "title": "ITC Kakatiya",
+      "subtitle": "Executive Club Room · Hyderabad, Telangana",
+      "referenceCode": "HTL-KAK-84920",
+      "details": {
+        "hotelId": "itc-kakatiya",
+        "hotelName": "ITC Kakatiya",
+        "location": "Hyderabad, Telangana",
+        "roomName": "Executive Club Room",
+        "nights": 3,
+        "guests": 2
+      },
+      "passengers": [
+        {
+          "name": "Alluri Vijaya Priya",
+          "age": 28,
+          "gender": "Female",
+          "idNumber": "GOVT-ID-7849"
+        },
+        {
+          "name": "Guest Companion",
+          "age": 29,
+          "gender": "Male"
+        }
+      ],
+      "checkInOrDeparture": "2026-10-15",
+      "checkOutOrArrival": "2026-10-18",
+      "amount": 15600,
+      "tax": 2808,
+      "totalPaid": 18408,
+      "status": "CONFIRMED",
+      "bookedAt": "2026-09-20T10:30:00.000Z",
+      "paymentMethod": "Razorpay UPI (Verified)",
+      "paymentId": "pay_rzp_mock_982341"
+    }
+  ],
+  "searches": [
+    {
+      "service": "BUS",
+      "from": "Hyderabad",
+      "to": "Mumbai",
+      "date": "2026-10-15",
+      "id": "srch_1790595400684",
+      "timestamp": "2026-09-28T11:36:40.684Z"
+    },
+    {
+      "service": "TRAIN",
+      "from": "Secunderabad (SC)",
+      "to": "Mumbai CSMT (CSMT)",
+      "date": "2026-10-15",
+      "id": "srch_1790595391988",
+      "timestamp": "2026-09-28T11:36:31.988Z"
+    },
+    {
+      "service": "FLIGHT",
+      "from": "Hyderabad (HYD)",
+      "to": "Mumbai (BOM)",
+      "date": "2026-10-15",
+      "id": "srch_1790595380284",
+      "timestamp": "2026-09-28T11:36:20.284Z"
+    },
+    {
+      "id": "srch_1",
+      "service": "FLIGHT",
+      "from": "Hyderabad (HYD)",
+      "to": "Mumbai (BOM)",
+      "timestamp": "2026-09-28T10:36:20.283Z"
+    },
+    {
+      "id": "srch_2",
+      "service": "HOTEL",
+      "query": "Udaipur",
+      "timestamp": "2026-09-28T09:36:20.283Z"
+    },
+    {
+      "id": "srch_3",
+      "service": "TRAIN",
+      "from": "Secunderabad (SC)",
+      "to": "Tirupati (TPTY)",
+      "timestamp": "2026-09-28T08:36:20.283Z"
+    }
+  ]
+}

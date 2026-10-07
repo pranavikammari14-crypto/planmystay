@@ -16,6 +16,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { SearchResultsModal } from './components/SearchResultsModal';
 import { AuthModal } from './components/AuthModal';
+import { UserDashboardModal } from './components/UserDashboardModal';
+import { OwnerDashboardModal } from './components/OwnerDashboardModal';
 
 import { Hotel, Room, Booking, UserProfile, WalletState } from './types/travel';
 import { INITIAL_HOTELS } from './data/hotels';
@@ -88,6 +90,8 @@ export default function App() {
 
   // Modals visibility
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
+  const [ownerModalOpen, setOwnerModalOpen] = useState(false);
   const [tripsModalOpen, setTripsModalOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -111,6 +115,31 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  // Sync with Backend Database on Mount
+  useEffect(() => {
+    const syncData = async () => {
+      try {
+        const [meRes, bookingsRes] = await Promise.all([
+          fetch('/api/auth/me'),
+          fetch('/api/bookings'),
+        ]);
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          if (meData.user) setCurrentUser(meData.user);
+        }
+        if (bookingsRes.ok) {
+          const bData = await bookingsRes.json();
+          if (bData.bookings && bData.bookings.length > 0) {
+            setBookings(bData.bookings);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend sync warning, using local state store:', err);
+      }
+    };
+    syncData();
+  }, []);
+
   const handleToggleFavorite = (hotelId: string) => {
     if (favorites.includes(hotelId)) {
       setFavorites(favorites.filter((id) => id !== hotelId));
@@ -132,11 +161,24 @@ export default function App() {
     showToast(`Booking ${newBooking.id} confirmed!`);
   };
 
-  const handleCancelBooking = (bookingId: string) => {
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/cancel`, { method: 'PATCH' });
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(
+          bookings.map((b) => (b.id === bookingId ? { ...b, status: 'CANCELLED' } : b))
+        );
+        showToast(`Booking cancelled. Refund of ₹${data.refund?.refundAmount?.toLocaleString('en-IN') || ''} initiated.`);
+        return;
+      }
+    } catch (err) {
+      console.error('Cancellation error:', err);
+    }
     setBookings(
-      bookings.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b))
+      bookings.map((b) => (b.id === bookingId ? { ...b, status: 'CANCELLED' } : b))
     );
-    showToast('Booking cancelled successfully.');
+    showToast('Booking cancelled.');
   };
 
   const handleAddHotel = (newHotelData: Partial<Hotel>) => {
@@ -198,6 +240,8 @@ export default function App() {
       {/* Header */}
       <Header
         user={currentUser}
+        onOpenDashboard={() => setDashboardModalOpen(true)}
+        onOpenOwnerPortal={() => setOwnerModalOpen(true)}
         onOpenTrips={() => setTripsModalOpen(true)}
         onOpenWallet={() => setWalletModalOpen(true)}
         onOpenSettings={() => setSettingsModalOpen(true)}
@@ -334,6 +378,10 @@ export default function App() {
         onClose={() => setTripsModalOpen(false)}
         bookings={bookings}
         onCancelBooking={handleCancelBooking}
+        onAddToAlbum={() => {
+          setTripsModalOpen(false);
+          setDashboardModalOpen(true);
+        }}
       />
 
       {/* 5. Travel Wallet Modal */}
@@ -366,14 +414,41 @@ export default function App() {
         onDeleteHotel={handleDeleteHotel}
       />
 
+      {/* 7b. User Dashboard Modal (Streaks, Badges & Travel Album) */}
+      <UserDashboardModal
+        isOpen={dashboardModalOpen}
+        onClose={() => setDashboardModalOpen(false)}
+        user={currentUser}
+        bookings={bookings}
+        onLogout={() => {
+          setCurrentUser(null);
+          setDashboardModalOpen(false);
+          showToast('Signed out successfully');
+        }}
+        onOpenOwnerPortal={() => setOwnerModalOpen(true)}
+        onOpenAdminPortal={() => setAdminModalOpen(true)}
+      />
+
+      {/* 7c. Hotel Owner Dashboard Modal */}
+      <OwnerDashboardModal
+        isOpen={ownerModalOpen}
+        onClose={() => setOwnerModalOpen(false)}
+        user={currentUser}
+        hotels={hotels}
+        bookings={bookings}
+        onAddHotel={handleAddHotel}
+        onDeleteHotel={handleDeleteHotel}
+      />
+
       {/* 8. Transit Search Results Modal */}
       <SearchResultsModal
         type={transitModalType}
         params={transitParams}
         isOpen={!!transitModalType}
         onClose={() => setTransitModalType(null)}
-        onSelectOption={(title, price) => {
-          showToast(`Selected: ${title} (₹${price.toLocaleString('en-IN')})`);
+        onBookingConfirmed={(booking) => {
+          setBookings((prev) => [booking, ...prev]);
+          showToast(`Reservation ${booking.referenceCode || booking.id} confirmed!`);
         }}
       />
 

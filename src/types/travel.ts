@@ -32,27 +32,38 @@ export interface Hotel {
 
 export interface Booking {
   id: string;
-  hotelId: string;
-  hotelName: string;
-  hotelImage: string;
-  hotelLocation: string;
-  roomName: string;
-  checkIn: string;
-  checkOut: string;
-  nights: number;
-  guests: number;
-  guestName: string;
-  guestEmail: string;
-  guestPhone: string;
+  serviceType?: 'HOTEL' | 'FLIGHT' | 'TRAIN' | 'BUS';
+  title?: string;
+  subtitle?: string;
+  referenceCode?: string;
+  hotelId?: string;
+  hotelName?: string;
+  hotelImage?: string;
+  hotelLocation?: string;
+  roomName?: string;
+  checkIn?: string;
+  checkOut?: string;
+  checkInOrDeparture?: string;
+  checkOutOrArrival?: string;
+  nights?: number;
+  guests?: number;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
   specialRequests?: string;
   addOns?: string[];
-  basePrice: number;
-  taxPrice: number;
-  totalPrice: number;
-  status: 'confirmed' | 'cancelled';
+  basePrice?: number;
+  taxPrice?: number;
+  totalPrice?: number;
+  totalPaid?: number;
+  status: 'confirmed' | 'cancelled' | 'CONFIRMED' | 'CANCELLED' | 'PENDING';
   bookedAt: string;
   paymentMethod: string;
   paymentId?: string;
+  isDemo?: boolean;
+  bookingType?: 'DEMO' | 'LIVE';
+  passengers?: any[];
+  details?: any;
 }
 
 export interface Flight {
@@ -106,7 +117,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: 'USER' | 'OWNER' | 'ADMIN';
   title: string;
   avatar: string;
   phone?: string;
@@ -115,6 +126,40 @@ export interface UserProfile {
     seatPref: string;
     hotelClass: string;
   };
+}
+
+export interface TravelStats {
+  userId: string;
+  totalTrips: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastTripDate?: string;
+  nextMilestone: {
+    target: number;
+    name: string;
+    remaining: number;
+  };
+}
+
+export interface TravelAchievement {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  badgeIcon: string;
+  unlockedAt: string;
+}
+
+export interface TravelMemory {
+  id: string;
+  userId: string;
+  bookingId?: string;
+  destination: string;
+  travelDate: string;
+  caption: string;
+  photoUrl: string;
+  tags?: string[];
+  createdAt: string;
 }
 
 export interface WalletState {
