@@ -9,6 +9,44 @@ export interface Room {
   perks: string[];
 }
 
+export type HotelVerificationStatus =
+  | 'Pending Verification'
+  | 'Verified'
+  | 'Rejected'
+  | 'Temporarily Unavailable'
+  | 'Inactive';
+
+export type BookingAuthorizationStatus =
+  | 'Direct Booking Authorized'
+  | 'Verified Informational Listing'
+  | 'External Official Channel'
+  | 'Verified Indicative Rate'
+  | 'Pending Property Verification'
+  | 'Instant Confirmation'
+  | (string & {});
+
+export interface HotelVerificationEvidence {
+  sourceUrl?: string;
+  sourceType?: string;
+  businessRegistrationOrGST?: string;
+  verifiedContact?: string;
+  verifiedAddress?: string;
+  officialWebsite?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  verifiedDate?: string;
+}
+
+export interface HotelAuditEntry {
+  id: string;
+  timestamp: string;
+  actor: string;
+  action: string;
+  previousStatus?: string;
+  newStatus?: string;
+  notes?: string;
+}
+
 export interface Hotel {
   id: string;
   name: string;
@@ -28,6 +66,32 @@ export interface Hotel {
   amenities: string[];
   neighborhood: string;
   rooms: Room[];
+
+  // Strict Verification & Governance Fields
+  verificationStatus?: HotelVerificationStatus;
+  verificationSource?: string;
+  lastVerifiedDate?: string;
+  bookingAuthorized?: boolean;
+  bookingStatus?: BookingAuthorizationStatus;
+  rejectionReason?: string;
+  verificationEvidence?: HotelVerificationEvidence;
+  auditHistory?: HotelAuditEntry[];
+
+  // Property Details & Contact
+  brand?: string;
+  fullAddress?: string;
+  roomTypes?: string[];
+  checkInTime?: string;
+  checkOutTime?: string;
+  cancellationPolicy?: string;
+  officialUrl?: string;
+  imageUrl?: string;
+  contactInfo?: string;
+  ownerVerificationStatus?: string;
+  isIndicativePrice?: boolean;
+  isVerifiedInventory?: boolean;
+  isOwnerSubmitted?: boolean;
+  approvalStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
 }
 
 export interface Booking {

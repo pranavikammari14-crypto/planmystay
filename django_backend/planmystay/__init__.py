@@ -1,0 +1,1 @@
+# PlanMyStay Django Project Package

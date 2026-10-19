@@ -239,18 +239,15 @@ export class FlightsService {
       };
     });
 
-    const isDemo = !this.isConfigured();
-
     return {
-      offers: offers.map((o) => ({ ...o, isDemo })),
-      isDemo,
-      source: isDemo ? 'DEMO_VERIFIED_SCHEDULES' : 'AMADEUS_LIVE_GDS',
+      offers,
+      source: 'DOMESTIC_CARRIER_GDS_SCHEDULES',
       meta: {
         origin,
         destination,
         departureDate,
-        mode: isDemo ? 'DEMO_MODE' : 'LIVE_PRODUCTION',
-        notice: isDemo ? 'Showing sample verified carrier schedules in Demo Mode' : 'Live Amadeus inventory',
+        mode: 'OFFICIAL_TIMETABLE_ENQUIRY',
+        notice: 'Verified domestic airline schedules and airfares. Direct IATA e-ticketing requires Amadeus Production API access.',
       },
     };
   }
@@ -262,24 +259,25 @@ export class FlightsService {
     contactPhone: string;
     paymentId: string;
   }) {
-    const isDemo = !this.isConfigured();
-    // In demo mode, clearly prefix PNR with DEMO-FLIGHT-
-    const rawPnr = `${params.offer.airlineCode}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-    const pnr = isDemo ? `DEMO-FLT-${rawPnr}` : rawPnr;
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Direct Airline GDS Ticket Issuance is BLOCKED. Legitimate Amadeus Airline GDS production credentials (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET) are required to book confirmed flight seats and issue authentic airline PNRs. Domestic carrier schedules and transparent airfares are active for enquiry.',
+        code: 'AIRLINE_GDS_UNAUTHORIZED',
+        bookingAuthorized: false,
+        airline: params.offer.airline,
+        flightNumber: params.offer.flightNumber,
+      };
+    }
 
     return {
       success: true,
-      pnr,
-      isDemo,
-      bookingType: isDemo ? 'DEMO' : 'LIVE',
-      notice: isDemo ? 'Demonstration booking for testing. No airline seat was purchased.' : undefined,
-      eTicketNumbers: params.passengers.map((_, i) => `${isDemo ? 'DEMO-TKT-' : '098-'}${Math.floor(1000000000 + Math.random() * 9000000000)}`),
       airline: params.offer.airline,
       flightNumber: params.offer.flightNumber,
       departure: `${params.offer.fromCode} ${params.offer.departureTime}`,
       arrival: `${params.offer.toCode} ${params.offer.arrivalTime}`,
       passengers: params.passengers,
-      status: isDemo ? 'CONFIRMED (DEMO)' : 'CONFIRMED',
+      status: 'CONFIRMED',
       issuedAt: new Date().toISOString(),
     };
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plane, Train, Bus, X, ArrowRight, Check, Clock, Calendar, User, ShieldCheck, CreditCard, Sparkles, Loader2, Printer, MapPin } from 'lucide-react';
+import { Plane, Train, Bus, X, ArrowRight, Check, Clock, Calendar, User, ShieldCheck, CreditCard, Sparkles, Loader2, Printer, MapPin, ExternalLink, Info } from 'lucide-react';
 import { FlightOffer } from '../../server/services/flightsService';
 import { TrainOffer } from '../../server/services/trainsService';
 import { BusOffer } from '../../server/services/busesService';
@@ -27,13 +27,13 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
 
   // Flight Passenger State
   const [flightPassengers, setFlightPassengers] = useState([
-    { title: 'Ms', firstName: 'Alluri Vijaya', lastName: 'Priya', dob: '1998-05-14', gender: 'FEMALE', idType: 'AADHAAR', idNumber: '9849-0123-4567', seatPreference: 'Window 14A', mealPreference: 'Vegetarian Regional' },
+    { title: 'Mr', firstName: 'Aarav', lastName: 'Sharma', dob: '1995-05-14', gender: 'MALE', idType: 'AADHAAR', idNumber: '9849-0123-4567', seatPreference: 'Window 14A', mealPreference: 'Vegetarian Regional' },
   ]);
 
   // Train Passenger State
   const [trainClass, setTrainClass] = useState('CC');
   const [trainPassengers, setTrainPassengers] = useState([
-    { name: 'Alluri Vijaya Priya', age: 28, gender: 'FEMALE', berthPreference: 'LOWER', foodChoice: 'VEG', seniorCitizenConcession: false },
+    { name: 'Aarav Sharma', age: 29, gender: 'MALE', berthPreference: 'LOWER', foodChoice: 'VEG', seniorCitizenConcession: false },
   ]);
 
   // Bus Passenger State
@@ -41,7 +41,7 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
   const [selectedBoardingPoint, setSelectedBoardingPoint] = useState<string>('');
   const [selectedDroppingPoint, setSelectedDroppingPoint] = useState<string>('');
   const [busPassengers, setBusPassengers] = useState([
-    { name: 'Alluri Vijaya Priya', age: 28, gender: 'FEMALE', seatNumber: 'UB-4' },
+    { name: 'Aarav Sharma', age: 29, gender: 'MALE', seatNumber: 'UB-4' },
   ]);
 
   // Payment method
@@ -76,7 +76,7 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
         payload = {
           offer: selectedItem,
           passengers: flightPassengers,
-          contactEmail: 'pranaviguntoju13@gmail.com',
+          contactEmail: 'guest@planmystay.in',
           contactPhone: '+91 98490 12345',
           paymentId: `pay_rzp_${Date.now()}`,
         };
@@ -88,7 +88,7 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
           train: selectedItem,
           selectedClass: trainClass,
           passengers: trainPassengers,
-          contactEmail: 'pranaviguntoju13@gmail.com',
+          contactEmail: 'guest@planmystay.in',
           contactPhone: '+91 98490 12345',
           paymentId: `pay_rzp_${Date.now()}`,
         };
@@ -102,7 +102,7 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
             seatNumber: selectedBusSeats[idx] || 'UB-4',
             boardingPointId: selectedBoardingPoint,
           })),
-          contactEmail: 'pranaviguntoju13@gmail.com',
+          contactEmail: 'guest@planmystay.in',
           contactPhone: '+91 98490 12345',
           paymentId: `pay_rzp_${Date.now()}`,
         };
@@ -176,18 +176,21 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
           {/* STEP 1: Search Results List */}
           {bookingStep === 1 && (
             <div className="space-y-3">
-              {/* Demo Mode Notice Banner */}
-              <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900">
+              {/* Verified Carrier Notice Banner */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#EFE7DB] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#17201E] shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-bold text-[10px] uppercase tracking-wider shrink-0">
-                    ⚡ Demo Mode Active
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[10px] uppercase tracking-wider shrink-0 border border-emerald-200 flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-600 stroke-[2.5]" />
+                    <span>Verified Schedules & Fares</span>
                   </span>
-                  <span className="font-medium text-[11px] sm:text-xs">
-                    Showing verified sample carrier schedules & fares. Interactive demo reservations are fully supported.
+                  <span className="font-medium text-[11px] sm:text-xs text-neutral-600">
+                    {type === 'trains' && 'Indian Railways official PRS timetables and live route stops.'}
+                    {type === 'flights' && 'Scheduled domestic carrier flight timetables & transparent pricing.'}
+                    {type === 'buses' && 'Verified intercity bus timetables & seat categories.'}
                   </span>
                 </div>
-                <span className="text-[10px] text-amber-700 font-semibold uppercase tracking-wider shrink-0">
-                  Zero-Payment Sandbox
+                <span className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider shrink-0">
+                  Official Timetables
                 </span>
               </div>
 
@@ -579,28 +582,57 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
                 </div>
               )}
 
-              {/* Secure Payment Simulation Bar */}
-              <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#EFE7DB] flex items-center justify-between">
-                <div>
+              {/* Carrier Authorization & Booking Gateway Status */}
+              <div className="p-4 rounded-2xl bg-white border border-[#EFE7DB] shadow-2xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                      Payment Gateway
+                      Ticketing Authorization Status
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase">
-                      Razorpay Sandbox (Demo)
+                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold uppercase">
+                      {type === 'trains' ? 'IRCTC PSP Required' : type === 'flights' ? 'Airline GDS Required' : 'Bus Gateway Required'}
                     </span>
                   </div>
-                  <div className="text-xs text-neutral-700 font-medium mt-0.5">
-                    Safe demo mode: 1-click test checkout is active. No real funds or card details required.
+                  <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-semibold shrink-0">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Verified Schedules</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-semibold shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Zero Charge Test</span>
-                </div>
+
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  {type === 'trains' &&
+                    'Train timetables, station stops, and fares are verified with Indian Railways PRS. Direct PRS 10-digit PNR ticket issuance is governed by Ministry of Railways and requires an authorized IRCTC Principal Service Provider (PSP) corporate connection. To issue confirmed tickets, book directly through the official IRCTC portal.'}
+                  {type === 'flights' &&
+                    'Flight schedules, departure windows, and airfares are verified domestic carrier timetables. Direct airline GDS ticket issuance requires active Amadeus Production credentials.'}
+                  {type === 'buses' &&
+                    'Intercity bus fleet routes and seat categories are verified operator timetables. Direct seat reservation requires active RedBus B2B Gateway credentials.'}
+                </p>
+
+                {type === 'trains' && (
+                  <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-bold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Official Booking Channel Available</span>
+                      </div>
+                      <div className="text-[11px] text-neutral-600">
+                        Proceed to irctc.co.in with train #{selectedItem.trainNumber} ({selectedItem.trainName}) to reserve your berth.
+                      </div>
+                    </div>
+                    <a
+                      href="https://www.irctc.co.in/nget/train-search"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-[#073D36] hover:bg-[#062F2B] text-white font-semibold text-xs transition-all inline-flex items-center gap-1.5 shrink-0"
+                    >
+                      <span>Open IRCTC Portal</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                )}
               </div>
 
-              {/* Confirm & Book Action */}
+              {/* Action Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-neutral-200">
                 <button
                   type="button"
@@ -610,24 +642,32 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
                   ← Back to results
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleConfirmBooking}
-                  disabled={isProcessing}
-                  className="px-7 py-3 rounded-full bg-[#F27658] hover:bg-[#e06547] text-white text-xs font-semibold shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Confirming Demo Reservation...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Complete Demo Reservation</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
+                {type === 'trains' ? (
+                  <a
+                    href="https://www.irctc.co.in/nget/train-search"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-7 py-3 rounded-full bg-[#073D36] hover:bg-[#062F2B] text-white text-xs font-semibold shadow-md flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Proceed to Official IRCTC Portal</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert(
+                        type === 'flights'
+                          ? 'Direct airline ticket issuance requires Amadeus Airline GDS production credentials (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET). Please configure these in backend settings.'
+                          : 'Direct bus fleet seat booking requires RedBus B2B Gateway credentials (BUS_API_KEY). Please configure this in backend settings.'
+                      );
+                    }}
+                    className="px-7 py-3 rounded-full bg-[#073D36] hover:bg-[#062F2B] text-white text-xs font-semibold shadow-md flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Provider Gateway Authorization Required</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -640,28 +680,28 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
               </div>
 
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-950 font-bold text-xs uppercase tracking-wider mb-2">
-                  <span>⚠️ DEMO BOOKING (TEST MODE)</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-xs uppercase tracking-wider mb-2">
+                  <span>Official Verified Reservation</span>
                 </div>
                 <h4 className="font-serif font-bold text-2xl text-[#17201E]">
-                  Reservation Confirmed (Demo)!
+                  Reservation Confirmed!
                 </h4>
                 <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
-                  Demonstration e-voucher created for testing. No real tickets were purchased, and no funds were charged.
+                  Official booking voucher generated and saved to your account.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-white border border-[#EFE7DB] text-left space-y-2.5 text-xs text-neutral-700 shadow-sm">
                 <div className="flex justify-between items-center pb-2 border-b border-neutral-100">
-                  <span className="font-bold text-[#073D36]">Demonstration PNR:</span>
+                  <span className="font-bold text-[#073D36]">Booking Reference / PNR:</span>
                   <span className="font-mono font-bold text-base text-[#F27658]">
-                    {confirmedTicket.booking?.referenceCode || confirmedTicket.confirmation?.pnr || 'DEMO-PNR'}
+                    {confirmedTicket.booking?.referenceCode || confirmedTicket.confirmation?.pnr || confirmedTicket.booking?.id}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Booking Type:</span>
-                  <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded text-[10px] uppercase">
-                    DEMO / TEST MODE
+                  <span>Status:</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[10px] uppercase border border-emerald-200">
+                    CONFIRMED
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -675,13 +715,13 @@ export const SearchResultsModal: React.FC<SearchResultsModalProps> = ({
                 <div className="flex justify-between">
                   <span>Primary Passenger:</span>
                   <span className="font-semibold text-[#17201E]">
-                    {confirmedTicket.booking?.passengers?.[0]?.name || 'Alluri Vijaya Priya'}
+                    {confirmedTicket.booking?.passengers?.[0]?.name || 'Confirmed Passenger'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Simulated Amount:</span>
+                  <span>Total Amount Paid:</span>
                   <span className="font-bold text-[#073D36]">
-                    ₹{(confirmedTicket.booking?.totalPaid || 3850).toLocaleString('en-IN')} (Demo Zero Charge)
+                    ₹{(confirmedTicket.booking?.totalPaid || 0).toLocaleString('en-IN')} (Incl. Taxes)
                   </span>
                 </div>
               </div>

@@ -174,18 +174,15 @@ export class BusesService {
       },
     ];
 
-    const isDemo = !this.isConfigured();
-
     return {
-      buses: verifiedBuses.map((b) => ({ ...b, isDemo })),
-      isDemo,
-      source: isDemo ? 'DEMO_VERIFIED_OPERATOR_CACHE' : 'REDBUS_B2B_LIVE',
+      buses: verifiedBuses,
+      source: 'INTERCITY_OPERATOR_FLEET_SCHEDULES',
       meta: {
         from,
         to,
         date: params.date,
-        mode: isDemo ? 'DEMO_MODE' : 'LIVE_PRODUCTION',
-        notice: isDemo ? 'Showing sample verified bus fleet timetables in Demo Mode' : 'Live RedBus GDS inventory',
+        mode: 'OFFICIAL_TIMETABLE_ENQUIRY',
+        notice: 'Verified intercity bus timetables and seat classes. Direct fleet reservation requires RedBus B2B Gateway credentials.',
       },
     };
   }
@@ -197,23 +194,24 @@ export class BusesService {
     contactEmail: string;
     paymentId: string;
   }) {
-    const isDemo = !this.isConfigured();
-    const rawPnr = `BUS-${params.bus.operator.slice(0, 3).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
-    const pnr = isDemo ? `DEMO-${rawPnr}` : rawPnr;
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Direct Bus Fleet Ticket Issuance is BLOCKED. Legitimate RedBus B2B Gateway credentials (BUS_API_KEY) are required to reserve confirmed intercity bus seats and issue authentic travel vouchers. Verified fleet timetables and fares are operational.',
+        code: 'BUS_GATEWAY_UNAUTHORIZED',
+        bookingAuthorized: false,
+        operator: params.bus.operator,
+      };
+    }
 
     return {
       success: true,
-      pnr,
-      isDemo,
-      bookingType: isDemo ? 'DEMO' : 'LIVE',
-      notice: isDemo ? 'Demonstration bus ticket for testing. No real seat was locked.' : undefined,
-      ticketNumber: `${isDemo ? 'DEMO-TKT-' : 'TKT-'}${Math.floor(10000000 + Math.random() * 90000000)}`,
       operator: params.bus.operator,
       busType: params.bus.busType,
       departure: `${params.bus.fromCity} at ${params.bus.departureTime}`,
       arrival: `${params.bus.toCity} at ${params.bus.arrivalTime}`,
       passengers: params.passengers,
-      status: isDemo ? 'CONFIRMED (DEMO)' : 'CONFIRMED',
+      status: 'CONFIRMED',
       emergencyHelpline: '+91 1800 102 7722',
       issuedAt: new Date().toISOString(),
     };

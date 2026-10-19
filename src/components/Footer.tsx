@@ -1,12 +1,21 @@
 import React from 'react';
 import { ArrowUp, ShieldCheck } from 'lucide-react';
+import { PlanMyStayLogo } from './PlanMyStayLogo';
+import { LegalTab } from './LegalModal';
 
 interface FooterProps {
   onOpenAdmin: () => void;
+  onOpenOwnerPortal?: () => void;
+  onOpenLegal?: (tab: LegalTab) => void;
   onNavigateTab?: (tab: 'flights' | 'trains' | 'buses' | 'hotels') => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenAdmin,
+  onOpenOwnerPortal,
+  onOpenLegal,
+  onNavigateTab,
+}) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -14,7 +23,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
   return (
     <footer className="bg-[#073D36] text-white border-t border-[#062F2B] pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back to top button matching video */}
+        {/* Back to top button */}
         <div className="mb-10">
           <button
             onClick={scrollToTop}
@@ -28,21 +37,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
           {/* Brand Info */}
           <div className="space-y-4 md:col-span-1">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white text-[#073D36] flex items-center justify-center font-serif font-bold text-lg shadow-sm">
-                P
-              </div>
-              <span className="font-serif font-bold text-2xl tracking-tight text-white">
-                PlanMyStay<span className="text-[#F27658]">.in</span>
-              </span>
+            <div className="bg-white p-2.5 rounded-2xl inline-block shadow-sm">
+              <PlanMyStayLogo className="h-7 w-auto" />
             </div>
 
             <p className="text-sm text-[#EFE7DB]/80 font-light leading-relaxed">
-              Travel planning, made human.
+              Travel planning, made human. Curated, verified, and affordable stays across India.
             </p>
 
             <div className="text-xs text-[#EFE7DB]/60 font-light">
-              Founded by <strong>Alluri Vijaya Priya</strong>
+              Official Platform: <span className="text-white font-medium">PlanMyStay.in</span>
             </div>
           </div>
 
@@ -54,8 +58,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
             <ul className="space-y-2 text-xs text-[#EFE7DB]/75">
               <li>
                 <button
+                  onClick={() => onNavigateTab?.('hotels')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Hotels & Stays
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onNavigateTab?.('flights')}
-                  className="hover:text-white transition-colors cursor-pointer"
+                  className="hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Flights
                 </button>
@@ -63,31 +75,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
               <li>
                 <button
                   onClick={() => onNavigateTab?.('trains')}
-                  className="hover:text-white transition-colors cursor-pointer"
+                  className="hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Trains
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigateTab?.('hotels')}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  Hotels
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => onNavigateTab?.('buses')}
-                  className="hover:text-white transition-colors cursor-pointer"
+                  className="hover:text-white transition-colors cursor-pointer text-left"
                 >
                   Buses
                 </button>
-              </li>
-              <li>
-                <a href="#hotels" className="hover:text-white transition-colors">
-                  Offers
-                </a>
               </li>
             </ul>
           </div>
@@ -95,69 +94,90 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
           {/* Company Links */}
           <div className="space-y-3">
             <h4 className="font-bold text-xs uppercase tracking-widest text-[#EFE7DB]">
-              COMPANY
+              COMPANY & SUPPORT
             </h4>
             <ul className="space-y-2 text-xs text-[#EFE7DB]/75">
               <li>
-                <a href="#experience" className="hover:text-white transition-colors">
+                <button
+                  onClick={() => onOpenLegal?.('about')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
                   About Us
-                </a>
+                </button>
               </li>
               <li>
-                <a href="mailto:support@planmystay.in" className="hover:text-white transition-colors">
-                  Contact
-                </a>
+                <button
+                  onClick={() => onOpenLegal?.('contact')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Contact Us
+                </button>
               </li>
               <li>
-                <a href="#experience" className="hover:text-white transition-colors">
-                  Help Center
-                </a>
+                <button
+                  onClick={() => onOpenLegal?.('support')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Help & Support
+                </button>
               </li>
               <li>
-                <a href="#hotels" className="hover:text-white transition-colors">
-                  Partner With Us
-                </a>
+                <button
+                  onClick={() => onOpenOwnerPortal ? onOpenOwnerPortal() : onOpenAdmin()}
+                  className="hover:text-white transition-colors cursor-pointer text-left font-medium text-[#F27658]"
+                >
+                  List Your Property (Owners)
+                </button>
               </li>
             </ul>
           </div>
 
-          {/* Peace of Mind Links */}
+          {/* Legal & Policies */}
           <div className="space-y-3">
             <h4 className="font-bold text-xs uppercase tracking-widest text-[#EFE7DB]">
-              FOR YOUR PEACE OF MIND
+              LEGAL POLICIES
             </h4>
             <ul className="space-y-2 text-xs text-[#EFE7DB]/75">
               <li>
-                <a href="#hotels" className="hover:text-white transition-colors">
-                  Cancellation Policy
-                </a>
+                <button
+                  onClick={() => onOpenLegal?.('privacy')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Privacy Policy
+                </button>
               </li>
               <li>
-                <a href="#hotels" className="hover:text-white transition-colors">
-                  Privacy
-                </a>
+                <button
+                  onClick={() => onOpenLegal?.('terms')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Terms & Conditions
+                </button>
               </li>
               <li>
-                <a href="#hotels" className="hover:text-white transition-colors">
-                  Terms
-                </a>
+                <button
+                  onClick={() => onOpenLegal?.('cancellation')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Cancellation & Refund Policy
+                </button>
               </li>
               <li>
                 <button
                   onClick={onOpenAdmin}
                   className="hover:text-[#F27658] transition-colors cursor-pointer text-left"
                 >
-                  List Your Hotel
+                  Admin Verification Portal
                 </button>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar matching video */}
+        {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#EFE7DB]/60">
           <div>
-            © 2026 PlanMyStay.in. Built for better journeys. To make travel effortless across India with transparent booking and AI trip planning.
+            © 2026 PlanMyStay.in. Built for better journeys across India with transparent booking and verified accommodations.
           </div>
 
           <div className="flex items-center gap-4">

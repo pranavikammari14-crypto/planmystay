@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types/travel';
+import { PlanMyStayLogo } from './PlanMyStayLogo';
 import { Compass, Wallet, Settings, LogOut, ShieldCheck, Menu, X, ChevronDown, Sparkles, Flame, Hotel as HotelIcon, LayoutDashboard, Camera } from 'lucide-react';
 
 interface HeaderProps {
@@ -41,17 +42,9 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-2.5">
-          <a href="#" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-full bg-[#073D36] flex items-center justify-center text-white font-serif font-bold text-lg shadow-sm">
-              P
-            </div>
-            <span className="font-serif font-bold text-2xl tracking-tight text-[#17201E]">
-              PlanMyStay<span className="text-[#F27658]">.in</span>
-            </span>
+          <a href="#" className="flex items-center gap-2 group transition-opacity hover:opacity-90">
+            <PlanMyStayLogo className="h-8 sm:h-9 w-auto" />
           </a>
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-100/90 text-amber-900 border border-amber-300/70">
-            Demo Mode
-          </span>
         </div>
 
         {/* Center Nav - Desktop */}

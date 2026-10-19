@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { X, Lock, Mail, User, ShieldCheck, Key, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { UserProfile } from '../types/travel';
+import { LegalTab } from './LegalModal';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (user: UserProfile) => void;
+  onOpenLegal?: (tab: LegalTab) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   onLoginSuccess,
+  onOpenLegal,
 }) => {
   const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
   const [name, setName] = useState('');
@@ -48,6 +51,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error(data.error || 'Registration failed');
       }
 
+      if (data.token) {
+        localStorage.setItem('pms_token', data.token);
+      }
+
       onLoginSuccess(data.user);
       onClose();
     } catch (err: any) {
@@ -75,6 +82,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Invalid credentials');
+      }
+
+      if (data.token) {
+        localStorage.setItem('pms_token', data.token);
       }
 
       onLoginSuccess(data.user);
@@ -146,7 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const founderUser: UserProfile = {
       id: 'usr_founder_01',
       name: 'Alluri Vijaya Priya',
-      email: 'pranaviguntoju13@gmail.com',
+      email: 'founder@planmystay.in',
       role: 'ADMIN',
       title: 'Founder account',
       avatar: 'AP',
@@ -349,6 +360,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
+
+              <div className="text-[11px] text-neutral-500 pt-2 text-center leading-normal">
+                By creating an account, you agree to our{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenLegal?.('terms');
+                  }}
+                  className="text-[#073D36] font-semibold underline hover:text-[#F27658] cursor-pointer"
+                >
+                  Terms & Conditions
+                </button>{' '}
+                and acknowledge our{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenLegal?.('privacy');
+                  }}
+                  className="text-[#073D36] font-semibold underline hover:text-[#F27658] cursor-pointer"
+                >
+                  Privacy Policy
+                </button>.
+              </div>
             </form>
           )}
 

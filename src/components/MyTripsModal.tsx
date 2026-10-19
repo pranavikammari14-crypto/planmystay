@@ -51,20 +51,12 @@ export const MyTripsModal: React.FC<MyTripsModalProps> = ({
             bookings.map((booking) => {
               const serviceType = booking.serviceType || 'HOTEL';
               const isCancelled = (booking.status || '').toLowerCase() === 'cancelled';
-              const isDemo = booking.isDemo !== false && (
-                booking.isDemo === true ||
-                (booking.referenceCode && booking.referenceCode.includes('DEMO')) ||
-                (booking.id && booking.id.includes('DEMO')) ||
-                (booking.bookingType === 'DEMO') ||
-                true // default in current demo phase
-              );
+              const isPending = (booking.status || '').toLowerCase() === 'pending';
 
               return (
                 <div
                   key={booking.id}
-                  className={`p-5 rounded-2xl bg-white border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
-                    isDemo ? 'border-amber-200/80 bg-gradient-to-r from-amber-50/20 to-white' : 'border-[#EFE7DB]'
-                  }`}
+                  className="p-5 rounded-2xl bg-white border border-[#EFE7DB] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
                 >
                   <div className="space-y-1.5 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -79,25 +71,20 @@ export const MyTripsModal: React.FC<MyTripsModalProps> = ({
                         {booking.title || booking.hotelName}
                       </span>
 
-                      {/* Explicit Demo vs Real Tag */}
-                      {isDemo ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                          Demo Booking
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                          Official Live Booking
-                        </span>
-                      )}
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
+                        Official Booking
+                      </span>
 
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           isCancelled
                             ? 'bg-rose-100 text-rose-800'
+                            : isPending
+                            ? 'bg-amber-100 text-amber-800'
                             : 'bg-emerald-100 text-emerald-800'
                         }`}
                       >
-                        {isCancelled ? 'CANCELLED' : isDemo ? 'CONFIRMED (TEST)' : 'CONFIRMED'}
+                        {isCancelled ? 'CANCELLED' : isPending ? 'PENDING' : 'CONFIRMED'}
                       </span>
                     </div>
 
@@ -116,11 +103,11 @@ export const MyTripsModal: React.FC<MyTripsModalProps> = ({
                     <div className="text-[11px] text-neutral-400 pt-0.5 flex flex-wrap items-center gap-2">
                       <span>Ref / PNR: <strong className="font-mono text-neutral-700">{booking.referenceCode || booking.id}</strong></span>
                       <span>·</span>
-                      <span>{booking.paymentMethod || 'Razorpay Sandbox (Demo)'}</span>
-                      {isDemo && (
+                      <span>{booking.paymentMethod || 'Razorpay Verified'}</span>
+                      {booking.paymentId && (
                         <>
                           <span>·</span>
-                          <span className="text-amber-700 font-medium">Demo Mode · Test Reservation</span>
+                          <span className="font-mono text-neutral-500">Txn: {booking.paymentId}</span>
                         </>
                       )}
                     </div>
@@ -132,7 +119,7 @@ export const MyTripsModal: React.FC<MyTripsModalProps> = ({
                         ₹{(booking.totalPaid || booking.totalPrice || 0).toLocaleString('en-IN')}
                       </div>
                       <div className="text-[10px] text-neutral-400">
-                        {isDemo ? 'Simulated Total (Test Mode)' : 'Total Paid (Incl. GST)'}
+                        Total Paid (Incl. 18% GST)
                       </div>
                     </div>
 
@@ -160,7 +147,7 @@ export const MyTripsModal: React.FC<MyTripsModalProps> = ({
                       {!isCancelled && (
                         <button
                           onClick={() => {
-                            if (confirm('Are you sure you want to cancel this reservation? In demo mode, simulated refunds are instantly updated.')) {
+                            if (confirm('Are you sure you want to cancel this reservation? Refunds are processed back to your original payment method via Razorpay as per the property cancellation policy.')) {
                               onCancelBooking(booking.id);
                             }
                           }}

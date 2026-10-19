@@ -16,10 +16,12 @@ export interface VerifyPaymentParams {
 export class PaymentsService {
   private keyId: string;
   private keySecret: string;
+  private webhookSecret: string;
 
   constructor() {
     this.keyId = process.env.RAZORPAY_KEY_ID || '';
     this.keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+    this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || this.keySecret;
   }
 
   public isConfigured(): boolean {
@@ -32,14 +34,25 @@ export class PaymentsService {
   }
 
   public getStatus() {
+    const handle = 'https://razorpay.me/@planmystayinvp';
     if (this.isConfigured()) {
       return {
         status: 'WORKING',
         provider: 'Razorpay Payment Gateway (RBI Authorized)',
         mode: this.keyId.startsWith('rzp_live') ? 'LIVE_PRODUCTION' : 'TEST_SANDBOX',
+        isLive: this.keyId.startsWith('rzp_live'),
         isDemo: false,
+        keyId: this.keyId,
         keyIdPrefix: this.keyId.substring(0, 8) + '...',
-        supportedPaymentMethods: ['UPI (GPay/PhonePe/Paytm/BHIM)', 'Credit/Debit Cards', 'NetBanking (50+ Banks)', 'EMI', 'Corporate Cards'],
+        paymentHandle: handle,
+        webhookUrl: 'https://planmystay.in/api/payments/webhook',
+        supportedPaymentMethods: [
+          'UPI (Google Pay, PhonePe, Paytm, BHIM)',
+          'Credit/Debit Cards (Visa, Mastercard, RuPay, Amex)',
+          'NetBanking (50+ Indian Banks)',
+          'EMI & Pay Later',
+          'Direct Payment Handle (@planmystayinvp)',
+        ],
       };
     }
 
@@ -48,6 +61,9 @@ export class PaymentsService {
       provider: 'Razorpay Payment Gateway (RBI Authorized)',
       mode: 'TEST_SANDBOX',
       isLive: false,
+      keyId: 'rzp_test_PlanMyStaySandbox',
+      paymentHandle: handle,
+      webhookUrl: 'https://planmystay.in/api/payments/webhook',
       supportedPaymentMethods: ['UPI (GPay/PhonePe/Paytm/BHIM)', 'Credit/Debit Cards', 'NetBanking (50+ Banks)', 'EMI'],
       requiredEnv: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'],
       accountInfo: 'Sign up at https://dashboard.razorpay.com. Generate API keys in Settings > API Keys for live settlements. Safe sandbox is active for testing.',
@@ -89,53 +105,86 @@ export class PaymentsService {
             provider: 'RAZORPAY_OFFICIAL',
           };
         } else {
-          const errData = await res.json();
-          console.warn('Razorpay order creation notice:', errData);
+          const errData = await res.json().catch(() => ({}));
+          console.warn('Razorpay order creation error response:', errData);
+          return {
+            success: false,
+            error: errData?.error?.description || 'Failed to create order on Razorpay servers.',
+            code: 'RAZORPAY_API_ERROR',
+          };
         }
-      } catch (err) {
-        console.error('Network error contacting Razorpay, falling back to test sandbox:', err);
+      } catch (err: any) {
+        console.error('Network error contacting Razorpay:', err);
+        return {
+          success: false,
+          error: `Network error connecting to Razorpay: ${err?.message || 'Gateway unreachable'}`,
+          code: 'RAZORPAY_NETWORK_ERROR',
+        };
       }
     }
 
-    // Secure fallback test sandbox order
-    const testOrderId = `order_demo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     return {
-      success: true,
-      orderId: testOrderId,
-      amount: params.amount,
-      amountInPaise,
-      currency,
-      keyId: 'rzp_test_demo_mode',
-      isDemo: true,
-      provider: 'RAZORPAY_SANDBOX',
-      notice: 'Demo order generated in Razorpay Test Sandbox mode. No actual charge will occur.',
+      success: false,
+      error: 'Razorpay payment gateway is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend environment variables.',
+      code: 'GATEWAY_NOT_CONFIGURED',
     };
   }
 
   public verifyPayment(params: VerifyPaymentParams): { verified: boolean; message: string; isDemo?: boolean } {
     if (!params.orderId || !params.paymentId) {
-      return { verified: false, message: 'Missing orderId or paymentId' };
+      return { verified: false, message: 'Missing orderId or paymentId.' };
     }
 
-    // If Razorpay secret is present, verify HMAC-SHA256 signature
-    if (this.isConfigured() && params.signature) {
-      const generatedSignature = crypto
-        .createHmac('sha256', this.keySecret)
-        .update(`${params.orderId}|${params.paymentId}`)
-        .digest('hex');
-
-      if (generatedSignature === params.signature) {
-        return { verified: true, isDemo: false, message: 'Payment verified with cryptographic signature' };
-      }
-      return { verified: false, message: 'Cryptographic signature mismatch' };
+    if (!this.isConfigured()) {
+      return {
+        verified: false,
+        message: 'Payment verification failed: Razorpay payment gateway credentials not configured on server.',
+      };
     }
 
-    // Test / Demo sandbox verification
+    if (!params.signature) {
+      return {
+        verified: false,
+        message: 'Missing cryptographic payment signature (razorpay_signature). Payment cannot be verified.',
+      };
+    }
+
+    // Verify HMAC-SHA256 signature
+    const generatedSignature = crypto
+      .createHmac('sha256', this.keySecret)
+      .update(`${params.orderId}|${params.paymentId}`)
+      .digest('hex');
+
+    if (generatedSignature === params.signature) {
+      return {
+        verified: true,
+        isDemo: !this.keyId.startsWith('rzp_live'),
+        message: 'Payment cryptographically verified with official Razorpay HMAC-SHA256 signature.',
+      };
+    }
+
     return {
-      verified: true,
-      isDemo: true,
-      message: 'Payment verified in Razorpay Test / Demo sandbox mode.',
+      verified: false,
+      isDemo: false,
+      message: 'Cryptographic signature mismatch. Payment verification failed.',
     };
+  }
+
+  public verifyWebhookSignature(payload: string | Buffer, signature: string): boolean {
+    if (!signature) return false;
+    const secret = this.webhookSecret || this.keySecret;
+    if (!secret) return false;
+    const rawString = typeof payload === 'string' ? payload : payload.toString('utf-8');
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(rawString)
+      .digest('hex');
+
+    try {
+      return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
+    } catch {
+      return false;
+    }
   }
 
   public async processRefund(paymentId: string, amount?: number) {

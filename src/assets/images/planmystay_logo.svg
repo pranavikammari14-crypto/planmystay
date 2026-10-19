@@ -1,0 +1,6 @@
+<svg viewBox="0 0 460 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PlanMyStay.in Logo">
+  <text x="12" y="78" fill="#1d2d50" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="68" letter-spacing="-1.5px">plan</text>
+  <path d="M 180 32 C 152 32, 140 46, 140 65 C 140 84, 152 98, 180 98 C 212 96, 228 88, 252 88 C 276 88, 292 96, 324 98 C 352 98, 364 84, 364 65 C 364 46, 352 32, 324 32 C 292 34, 276 42, 252 42 C 228 42, 212 34, 180 32 Z" fill="#b82424"/>
+  <text x="252" y="76" text-anchor="middle" fill="#ffffff" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="56" letter-spacing="-1px">mystay</text>
+  <text x="376" y="78" fill="#1d2d50" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="68" letter-spacing="-1.5px">.in</text>
+</svg>

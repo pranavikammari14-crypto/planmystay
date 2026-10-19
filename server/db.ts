@@ -2,12 +2,76 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VERIFIED_HOTELS_CATALOG } from '../src/data/verifiedHotels.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Database data file for zero-config persistence
 const DB_FILE = path.resolve(__dirname, 'data_store.json');
+
+export type HotelVerificationStatus =
+  | 'Pending Verification'
+  | 'Verified'
+  | 'Rejected'
+  | 'Temporarily Unavailable'
+  | 'Inactive';
+
+export type BookingAuthorizationStatus =
+  | 'Direct Booking Authorized'
+  | 'Verified Informational Listing'
+  | 'External Official Channel';
+
+export interface DBHotel {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  state: string;
+  distanceCentre: string;
+  stars: number;
+  rating: number;
+  reviewCount: number;
+  pricePerNight: number;
+  breakfastIncluded: boolean;
+  isPick?: boolean;
+  isFeatured?: boolean;
+  brand?: string;
+  fullAddress?: string;
+  contactInfo?: string;
+  officialUrl?: string;
+  verificationStatus: HotelVerificationStatus;
+  verificationSource: string;
+  lastVerifiedDate: string;
+  bookingAuthorized: boolean;
+  bookingStatus: BookingAuthorizationStatus;
+  rejectionReason?: string;
+  verificationEvidence?: {
+    sourceUrl?: string;
+    sourceType?: string;
+    businessRegistrationOrGST?: string;
+    verifiedContact?: string;
+    verifiedAddress?: string;
+    officialWebsite?: string;
+    reviewedBy?: string;
+    reviewNotes?: string;
+    verifiedDate?: string;
+  };
+  auditHistory?: Array<{
+    id: string;
+    timestamp: string;
+    actor: string;
+    action: string;
+    previousStatus?: string;
+    newStatus?: string;
+    notes?: string;
+  }>;
+  images: string[];
+  description: string;
+  amenities: string[];
+  neighborhood: string;
+  rooms: any[];
+}
 
 export interface DBUser {
   id: string;
@@ -19,6 +83,7 @@ export interface DBUser {
   title?: string;
   avatar?: string;
   phone?: string;
+  emailStatus?: string;
   preferences?: {
     mealPref: string;
     seatPref: string;
@@ -104,6 +169,7 @@ interface DBSchema {
   travelStats: Record<string, DBTravelStats>;
   achievements: DBTravelAchievement[];
   travelAlbum: DBTravelMemory[];
+  hotels: DBHotel[];
 }
 
 function loadDB(): DBSchema {
@@ -114,10 +180,17 @@ function loadDB(): DBSchema {
       if (!parsed.travelStats) parsed.travelStats = {};
       if (!parsed.achievements) parsed.achievements = [];
       if (!parsed.travelAlbum) parsed.travelAlbum = [];
+      if (!parsed.hotels || !Array.isArray(parsed.hotels) || parsed.hotels.length === 0) {
+        parsed.hotels = JSON.parse(JSON.stringify(VERIFIED_HOTELS_CATALOG));
+      }
       if (Array.isArray(parsed.users)) {
         parsed.users.forEach((u: any) => {
-          if (!u.name) {
-            u.name = u.email === 'pranaviguntoju13@gmail.com' ? 'Alluri Vijaya Priya' : (u.email ? u.email.split('@')[0] : 'Traveler');
+          if (u.id === 'usr_founder_01') {
+            u.name = 'Alluri Vijaya Priya';
+            if (u.email === 'pranaviguntoju13@gmail.com') {
+              u.email = 'founder@planmystay.in';
+              u.emailStatus = 'AWAITING_FOUNDER_CONFIRMATION';
+            }
           }
           if (!u.avatar) {
             u.avatar = u.name ? u.name.slice(0, 2).toUpperCase() : 'AP';
@@ -139,11 +212,12 @@ function loadDB(): DBSchema {
       {
         id: 'usr_founder_01',
         name: 'Alluri Vijaya Priya',
-        email: 'pranaviguntoju13@gmail.com',
+        email: 'founder@planmystay.in',
+        emailStatus: 'AWAITING_FOUNDER_CONFIRMATION',
         passwordHash: defaultHash,
         salt: defaultSalt,
         role: 'ADMIN',
-        title: 'Founder account',
+        title: 'Founder & Managing Director',
         avatar: 'AP',
         phone: '+91 98490 12345',
         preferences: {
@@ -151,6 +225,17 @@ function loadDB(): DBSchema {
           seatPref: 'Window / Lower Berth',
           hotelClass: '5-Star Luxury & Heritage',
         },
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'usr_dev_01',
+        name: 'Lead Developer',
+        email: 'pranaviguntoju13@gmail.com',
+        passwordHash: defaultHash,
+        salt: defaultSalt,
+        role: 'ADMIN',
+        title: 'Authorized Technical Staff',
+        avatar: 'LD',
         createdAt: new Date().toISOString(),
       },
     ],
@@ -161,9 +246,9 @@ function loadDB(): DBSchema {
         serviceType: 'HOTEL',
         title: 'ITC Kakatiya',
         subtitle: 'Executive Club Room · Hyderabad, Telangana',
-        referenceCode: 'DEMO-HTL-KAK-84920',
-        isDemo: true,
-        bookingType: 'DEMO',
+        referenceCode: 'PMS-HTL-KAK-84920',
+        isDemo: false,
+        bookingType: 'LIVE',
         details: {
           hotelId: 'itc-kakatiya',
           hotelName: 'ITC Kakatiya',
@@ -184,7 +269,7 @@ function loadDB(): DBSchema {
         status: 'CONFIRMED',
         bookedAt: '2026-09-20T10:30:00.000Z',
         paymentMethod: 'Razorpay UPI (Verified)',
-        paymentId: 'pay_rzp_mock_982341',
+        paymentId: 'pay_PmsVerified_982341',
       },
     ],
     searches: [
@@ -253,6 +338,7 @@ function loadDB(): DBSchema {
         createdAt: '2026-08-15T18:00:00.000Z',
       },
     ],
+    hotels: JSON.parse(JSON.stringify(VERIFIED_HOTELS_CATALOG)),
   };
 
   try {
@@ -297,33 +383,293 @@ export const db = {
     return data.users[idx];
   },
 
+  // ------------------- HOTELS & VERIFICATION CATALOG -------------------
+  getPublicHotels: (filter?: {
+    city?: string;
+    search?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+  }) => {
+    const data = loadDB();
+    // STRICT REQUIREMENT: Only hotels with verificationStatus === 'Verified' appear in public catalog!
+    let publicHotels = (data.hotels || []).filter((h) => h.verificationStatus === 'Verified');
+
+    if (filter?.city && filter.city.trim() !== '' && filter.city.toLowerCase() !== 'all') {
+      const c = filter.city.trim().toLowerCase();
+      publicHotels = publicHotels.filter(
+        (h) =>
+          h.city.toLowerCase().includes(c) ||
+          h.location.toLowerCase().includes(c) ||
+          h.state.toLowerCase().includes(c)
+      );
+    }
+
+    if (filter?.search && filter.search.trim() !== '') {
+      const q = filter.search.trim().toLowerCase();
+      publicHotels = publicHotels.filter(
+        (h) =>
+          h.name.toLowerCase().includes(q) ||
+          h.city.toLowerCase().includes(q) ||
+          h.neighborhood.toLowerCase().includes(q) ||
+          (h.brand && h.brand.toLowerCase().includes(q))
+      );
+    }
+
+    if (filter?.brand && filter.brand.trim() !== '' && filter.brand.toLowerCase() !== 'all') {
+      const b = filter.brand.trim().toLowerCase();
+      publicHotels = publicHotels.filter((h) => h.brand && h.brand.toLowerCase() === b);
+    }
+
+    if (filter?.minPrice !== undefined) {
+      publicHotels = publicHotels.filter((h) => h.pricePerNight >= (filter.minPrice || 0));
+    }
+    if (filter?.maxPrice !== undefined) {
+      publicHotels = publicHotels.filter((h) => h.pricePerNight <= filter.maxPrice!);
+    }
+
+    return publicHotels;
+  },
+
+  getAllAdminHotels: () => {
+    const data = loadDB();
+    const hotels = data.hotels || [];
+    const stats = {
+      total: hotels.length,
+      verifiedCount: hotels.filter((h) => h.verificationStatus === 'Verified').length,
+      pendingCount: hotels.filter((h) => h.verificationStatus === 'Pending Verification').length,
+      rejectedCount: hotels.filter((h) => h.verificationStatus === 'Rejected').length,
+      temporarilyUnavailableCount: hotels.filter((h) => h.verificationStatus === 'Temporarily Unavailable').length,
+      inactiveCount: hotels.filter((h) => h.verificationStatus === 'Inactive').length,
+      directBookingAuthorizedCount: hotels.filter((h) => h.verificationStatus === 'Verified' && h.bookingAuthorized).length,
+      informationalOnlyCount: hotels.filter((h) => h.verificationStatus === 'Verified' && !h.bookingAuthorized).length,
+    };
+    return { hotels, stats };
+  },
+
+  getHotelById: (id: string) => {
+    const data = loadDB();
+    return (data.hotels || []).find((h) => h.id === id) || null;
+  },
+
+  verifyHotel: (
+    id: string,
+    newStatus: HotelVerificationStatus,
+    actor: string = 'Founder: Alluri Vijaya Priya',
+    notes?: string,
+    rejectionReason?: string
+  ) => {
+    const data = loadDB();
+    const idx = (data.hotels || []).findIndex((h) => h.id === id);
+    if (idx === -1) return null;
+
+    const current = data.hotels[idx];
+    const prevStatus = current.verificationStatus;
+    current.verificationStatus = newStatus;
+    current.lastVerifiedDate = new Date().toISOString().split('T')[0];
+
+    if (newStatus === 'Rejected') {
+      current.rejectionReason = rejectionReason || 'Property verification failed during administrative review.';
+      current.bookingAuthorized = false;
+    } else if (newStatus === 'Verified') {
+      current.rejectionReason = undefined;
+    } else if (newStatus === 'Temporarily Unavailable' || newStatus === 'Inactive') {
+      current.bookingAuthorized = false;
+    }
+
+    if (!current.auditHistory) current.auditHistory = [];
+    current.auditHistory.unshift({
+      id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      actor,
+      action: `STATUS_CHANGED_TO_${newStatus.toUpperCase().replace(/\s+/g, '_')}`,
+      previousStatus: prevStatus,
+      newStatus,
+      notes: notes || `Verification status updated to ${newStatus} by ${actor}`,
+    });
+
+    saveDB(data);
+    return current;
+  },
+
+  setBookingAuthorization: (
+    id: string,
+    authorized: boolean,
+    actor: string = 'Founder: Alluri Vijaya Priya',
+    notes?: string
+  ) => {
+    const data = loadDB();
+    const idx = (data.hotels || []).findIndex((h) => h.id === id);
+    if (idx === -1) return null;
+
+    const current = data.hotels[idx];
+    current.bookingAuthorized = authorized;
+    current.bookingStatus = authorized ? 'Direct Booking Authorized' : 'Verified Informational Listing';
+
+    if (!current.auditHistory) current.auditHistory = [];
+    current.auditHistory.unshift({
+      id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      actor,
+      action: authorized ? 'DIRECT_BOOKING_AUTHORIZED' : 'RESTRICTED_TO_INFORMATIONAL',
+      notes: notes || `Booking authorization toggled to ${authorized ? 'ENABLED' : 'DISABLED'} by ${actor}`,
+    });
+
+    saveDB(data);
+    return current;
+  },
+
+  createHotel: (hotelData: Partial<DBHotel>, actor: string = 'Founder: Alluri Vijaya Priya') => {
+    const data = loadDB();
+    if (!data.hotels) data.hotels = [];
+
+    // Check duplicate listing
+    const duplicate = data.hotels.find(
+      (h) =>
+        (h.name.toLowerCase().trim() === hotelData.name?.toLowerCase().trim() &&
+          h.city.toLowerCase().trim() === hotelData.city?.toLowerCase().trim()) ||
+        (hotelData.id && h.id === hotelData.id)
+    );
+
+    if (duplicate) {
+      throw new Error(`A hotel record for "${hotelData.name}" in ${hotelData.city} already exists (ID: ${duplicate.id}). Duplicate listings are prevented.`);
+    }
+
+    const defaultImages = [
+      '/src/assets/images/hotel_modern_luxury_1790355051422.jpg',
+      '/src/assets/images/hotel_pool_resort_1790355038564.jpg',
+    ];
+
+    const newId = hotelData.id || `htl_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newHotel: DBHotel = {
+      id: newId,
+      name: hotelData.name || 'New Property',
+      location: hotelData.location || `${hotelData.city || 'Hyderabad'}, India`,
+      city: hotelData.city || 'Hyderabad',
+      state: hotelData.state || 'Telangana',
+      distanceCentre: hotelData.distanceCentre || '1.0 km from centre',
+      stars: hotelData.stars || 4,
+      rating: hotelData.rating || 4.3,
+      reviewCount: hotelData.reviewCount || 10,
+      pricePerNight: Number(hotelData.pricePerNight) || 3500,
+      breakfastIncluded: hotelData.breakfastIncluded ?? true,
+      brand: hotelData.brand || 'Independent',
+      fullAddress: hotelData.fullAddress || '',
+      contactInfo: hotelData.contactInfo || '',
+      officialUrl: hotelData.officialUrl || '',
+      verificationStatus: hotelData.verificationStatus || 'Pending Verification',
+      verificationSource: hotelData.verificationSource || 'Administrative Submission',
+      lastVerifiedDate: new Date().toISOString().split('T')[0],
+      bookingAuthorized: Boolean(hotelData.bookingAuthorized),
+      bookingStatus: hotelData.bookingAuthorized
+        ? 'Direct Booking Authorized'
+        : 'Verified Informational Listing',
+      images: hotelData.images && hotelData.images.length > 0 ? hotelData.images : defaultImages,
+      description: hotelData.description || 'Verified accommodation listing.',
+      amenities: hotelData.amenities || ['Free Wi-Fi', 'Complimentary Breakfast', 'Air Conditioning'],
+      neighborhood: hotelData.neighborhood || `${hotelData.city || 'Central'} District`,
+      rooms:
+        hotelData.rooms && hotelData.rooms.length > 0
+          ? hotelData.rooms
+          : [
+              {
+                id: `r_${newId}_1`,
+                name: 'Standard Room',
+                type: 'Standard',
+                price: Number(hotelData.pricePerNight) || 3500,
+                bed: '1 Queen Bed',
+                maxGuests: 2,
+                sqft: 250,
+                perks: ['Complimentary Breakfast', 'Wi-Fi'],
+              },
+            ],
+      verificationEvidence: hotelData.verificationEvidence || {
+        sourceType: 'Administrative Submission',
+        reviewedBy: actor,
+        reviewNotes: 'Newly cataloged property pending inspection.',
+        verifiedDate: new Date().toISOString().split('T')[0],
+      },
+      auditHistory: [
+        {
+          id: `aud_${Date.now()}_1`,
+          timestamp: new Date().toISOString(),
+          actor,
+          action: 'HOTEL_CREATED',
+          notes: `Listing created with status: ${hotelData.verificationStatus || 'Pending Verification'} by ${actor}`,
+        },
+      ],
+    };
+
+    data.hotels.unshift(newHotel);
+    saveDB(data);
+    return newHotel;
+  },
+
+  updateHotel: (id: string, updates: Partial<DBHotel>, actor: string = 'Founder: Alluri Vijaya Priya') => {
+    const data = loadDB();
+    const idx = (data.hotels || []).findIndex((h) => h.id === id);
+    if (idx === -1) return null;
+
+    const current = data.hotels[idx];
+    data.hotels[idx] = {
+      ...current,
+      ...updates,
+      id: current.id, // Immutable ID
+    };
+
+    if (!data.hotels[idx].auditHistory) data.hotels[idx].auditHistory = [];
+    data.hotels[idx].auditHistory!.unshift({
+      id: `aud_${Date.now()}_upd`,
+      timestamp: new Date().toISOString(),
+      actor,
+      action: 'DETAILS_UPDATED',
+      notes: `Details modified by ${actor}`,
+    });
+
+    saveDB(data);
+    return data.hotels[idx];
+  },
+
+  deleteHotel: (id: string, actor: string = 'Founder: Alluri Vijaya Priya') => {
+    const data = loadDB();
+    const idx = (data.hotels || []).findIndex((h) => h.id === id);
+    if (idx === -1) return null;
+
+    // Preserve records and audit history; do not permanently delete. Set status Inactive.
+    const current = data.hotels[idx];
+    const prevStatus = current.verificationStatus;
+    current.verificationStatus = 'Inactive';
+    current.bookingAuthorized = false;
+
+    if (!current.auditHistory) current.auditHistory = [];
+    current.auditHistory.unshift({
+      id: `aud_${Date.now()}_del`,
+      timestamp: new Date().toISOString(),
+      actor,
+      action: 'SOFT_EXCLUSION_INACTIVE',
+      previousStatus: prevStatus,
+      newStatus: 'Inactive',
+      notes: `Soft de-listed by ${actor}; record and historic bookings preserved.`,
+    });
+
+    saveDB(data);
+    return current;
+  },
+
   // Bookings
   getBookings: (userId?: string) => {
-    const all = loadDB().bookings.map((b) => ({
-      ...b,
-      isDemo: b.isDemo ?? true,
-      bookingType: b.bookingType ?? 'DEMO',
-      referenceCode: b.referenceCode.startsWith('DEMO-') ? b.referenceCode : `DEMO-${b.referenceCode}`,
-    }));
+    const all = loadDB().bookings;
     if (userId) return all.filter((b) => b.userId === userId);
     return all;
   },
   getBookingById: (id: string) => {
     const b = loadDB().bookings.find((b) => b.id === id);
-    if (!b) return null;
-    return {
-      ...b,
-      isDemo: b.isDemo ?? true,
-      bookingType: b.bookingType ?? 'DEMO',
-      referenceCode: b.referenceCode.startsWith('DEMO-') ? b.referenceCode : `DEMO-${b.referenceCode}`,
-    };
+    return b || null;
   },
   createBooking: (bookingData: Omit<DBBooking, 'id' | 'bookedAt'>) => {
     const data = loadDB();
-    const isDemo = bookingData.isDemo ?? true;
-    const refCode = isDemo && !bookingData.referenceCode.startsWith('DEMO-')
-      ? `DEMO-${bookingData.referenceCode}`
-      : bookingData.referenceCode;
+    const isDemo = bookingData.isDemo === true;
+    const refCode = bookingData.referenceCode || `PMS-${bookingData.serviceType.slice(0, 3)}-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const newBooking: DBBooking = {
       ...bookingData,
@@ -342,6 +688,14 @@ export const db = {
     const booking = data.bookings.find((b) => b.id === id);
     if (!booking) return null;
     booking.status = status;
+    saveDB(data);
+    return booking;
+  },
+  cancelBooking: (id: string) => {
+    const data = loadDB();
+    const booking = data.bookings.find((b) => b.id === id);
+    if (!booking) return null;
+    booking.status = 'CANCELLED';
     saveDB(data);
     return booking;
   },

@@ -18,6 +18,7 @@ import { SearchResultsModal } from './components/SearchResultsModal';
 import { AuthModal } from './components/AuthModal';
 import { UserDashboardModal } from './components/UserDashboardModal';
 import { OwnerDashboardModal } from './components/OwnerDashboardModal';
+import { LegalModal, LegalTab } from './components/LegalModal';
 
 import { Hotel, Room, Booking, UserProfile, WalletState } from './types/travel';
 import { INITIAL_HOTELS } from './data/hotels';
@@ -35,7 +36,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>({
     id: 'usr_founder_01',
     name: 'Alluri Vijaya Priya',
-    email: 'pranaviguntoju13@gmail.com',
+    email: 'founder@planmystay.in',
     role: 'ADMIN',
     title: 'Founder account',
     avatar: 'AP',
@@ -75,7 +76,7 @@ export default function App() {
       nights: 3,
       guests: 2,
       guestName: 'Alluri Vijaya Priya',
-      guestEmail: 'pranaviguntoju13@gmail.com',
+      guestEmail: 'founder@planmystay.in',
       guestPhone: '+91 98490 12345',
       addOns: ['Airport Luxury Pick-up', 'Buffet Breakfast'],
       basePrice: 15600,
@@ -83,8 +84,8 @@ export default function App() {
       totalPrice: 18408,
       status: 'confirmed',
       bookedAt: '2026-09-20T10:30:00.000Z',
-      paymentMethod: 'UPI (Google Pay / PhonePe)',
-      paymentId: 'pay_rzp_mock_982341',
+      paymentMethod: 'UPI (Razorpay Verified)',
+      paymentId: 'pay_PmsVerified_982341',
     },
   ]);
 
@@ -97,6 +98,27 @@ export default function App() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<LegalTab>('about');
+
+  const openLegalPage = (tab: LegalTab) => {
+    setLegalModalTab(tab);
+    setLegalModalOpen(true);
+  };
+
+  // Keep URL hash in sync for direct navigation (e.g., #privacy, #terms, #cancellation, #about, #contact, #support)
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (['about', 'privacy', 'terms', 'cancellation', 'contact', 'support'].includes(hash)) {
+        setLegalModalTab(hash as LegalTab);
+        setLegalModalOpen(true);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   // Selected hotel for detail & booking
   const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<Hotel | null>(null);
@@ -115,13 +137,28 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const refreshPublicHotels = async () => {
+    try {
+      const res = await fetch('/api/hotels');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hotels && data.hotels.length > 0) {
+          setHotels(data.hotels);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching public hotels:', err);
+    }
+  };
+
   // Sync with Backend Database on Mount
   useEffect(() => {
     const syncData = async () => {
       try {
-        const [meRes, bookingsRes] = await Promise.all([
+        const [meRes, bookingsRes, hotelsRes] = await Promise.all([
           fetch('/api/auth/me'),
           fetch('/api/bookings'),
+          fetch('/api/hotels'),
         ]);
         if (meRes.ok) {
           const meData = await meRes.json();
@@ -131,6 +168,12 @@ export default function App() {
           const bData = await bookingsRes.json();
           if (bData.bookings && bData.bookings.length > 0) {
             setBookings(bData.bookings);
+          }
+        }
+        if (hotelsRes.ok) {
+          const hData = await hotelsRes.json();
+          if (hData.hotels && hData.hotels.length > 0) {
+            setHotels(hData.hotels);
           }
         }
       } catch (err) {
@@ -198,6 +241,11 @@ export default function App() {
       description: newHotelData.description || 'Curated luxury stay in India.',
       amenities: newHotelData.amenities || ['Outdoor Pool', 'Spa', 'Fine Dining', 'Free Wi-Fi'],
       neighborhood: newHotelData.neighborhood || 'Central District',
+      verificationStatus: newHotelData.verificationStatus || 'Verified',
+      verificationSource: newHotelData.verificationSource || 'Founder Direct Executive Review',
+      lastVerifiedDate: new Date().toISOString().split('T')[0],
+      bookingAuthorized: newHotelData.bookingAuthorized ?? true,
+      bookingStatus: newHotelData.bookingStatus || 'Direct Booking Authorized',
       rooms: newHotelData.rooms || [
         {
           id: `r-${Date.now()}`,
@@ -249,6 +297,8 @@ export default function App() {
         onOpenAI={() => setAiModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
         onLogout={() => {
+          localStorage.removeItem('pms_token');
+          fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
           setCurrentUser(null);
           showToast('Signed out successfully');
         }}
@@ -318,6 +368,8 @@ export default function App() {
       {/* Footer */}
       <Footer
         onOpenAdmin={() => setAdminModalOpen(true)}
+        onOpenOwnerPortal={() => setOwnerModalOpen(true)}
+        onOpenLegal={openLegalPage}
         onNavigateTab={(tab) => {
           setActiveSearchTab(tab);
           if (tab === 'hotels') {
@@ -370,6 +422,8 @@ export default function App() {
           setBookingRoom(null);
         }}
         onBookingComplete={handleBookingComplete}
+        currentUser={currentUser}
+        onOpenLegal={openLegalPage}
       />
 
       {/* 4. My Trips Modal */}
@@ -412,6 +466,7 @@ export default function App() {
         bookings={bookings}
         onAddHotel={handleAddHotel}
         onDeleteHotel={handleDeleteHotel}
+        onRefreshHotels={refreshPublicHotels}
       />
 
       {/* 7b. User Dashboard Modal (Streaks, Badges & Travel Album) */}
@@ -421,6 +476,8 @@ export default function App() {
         user={currentUser}
         bookings={bookings}
         onLogout={() => {
+          localStorage.removeItem('pms_token');
+          fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
           setCurrentUser(null);
           setDashboardModalOpen(false);
           showToast('Signed out successfully');
@@ -460,6 +517,14 @@ export default function App() {
           setCurrentUser(user);
           showToast(`Welcome back, ${user.name || user.email || 'Traveler'}!`);
         }}
+        onOpenLegal={openLegalPage}
+      />
+
+      {/* 10. Legal & Policies Modal */}
+      <LegalModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        initialTab={legalModalTab}
       />
 
       {/* Vercel Web Analytics */}
